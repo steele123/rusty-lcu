@@ -1,6 +1,6 @@
 # rusty-lcu
 
-Rust helpers for the League Client Update API, inspired by Hasagi and Shaco.
+Rust helpers for the League Client Update API.
 
 The endpoint layer is generated from `schema/swagger.json`, which is vendored
 from the Dysolix LCU swagger data. To regenerate from a newer schema, run
