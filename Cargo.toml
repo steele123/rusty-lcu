@@ -4,6 +4,14 @@ version = "0.1.0"
 edition = "2024"
 description = "Generated Rust client helpers for the League Client Update API"
 license = "MIT"
+repository = "https://github.com/steele123/rusty-lcu"
+homepage = "https://github.com/steele123/rusty-lcu"
+documentation = "https://docs.rs/rusty-lcu"
+readme = "README.md"
+keywords = ["league-client", "lcu", "riot", "league-of-legends"]
+categories = ["api-bindings", "asynchronous", "games"]
+rust-version = "1.88"
+exclude = [".idea/*"]
 
 [dependencies]
 base64 = "0.22"
