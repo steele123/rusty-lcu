@@ -1,6 +1,7 @@
 # rusty-lcu
 
-Rust helpers for the League Client Update API.
+A library for interacting with the LCU API in Rust. It provides a typed interface to the LCU endpoints, as well as
+utilities for polling, event streams, and credential management.
 
 The endpoint layer is generated from `schema/swagger.json`, which is vendored
 from the Dysolix LCU swagger data. To regenerate from a newer schema, run
