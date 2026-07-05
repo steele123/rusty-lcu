@@ -1,5 +1,8 @@
 # rusty-lcu
 
+[![Crates.io](https://img.shields.io/crates/v/rusty-lcu.svg)](https://crates.io/crates/rusty-lcu)
+[![Docs.rs](https://docs.rs/rusty-lcu/badge.svg)](https://docs.rs/rusty-lcu)
+
 A library for interacting with the LCU API in Rust. It provides a typed interface to the LCU endpoints, as well as
 utilities for polling, event streams, and credential management.
 
@@ -9,6 +12,15 @@ from the Dysolix LCU swagger data. To regenerate from a newer schema, run
 Unix-like shells, then build normally. You can also set `LCU_SWAGGER_PATH`
 before building to generate from another local schema without replacing the
 vendored file.
+
+## Installation
+
+```toml
+[dependencies]
+rusty-lcu = "0.1.0"
+```
+
+Package: [crates.io/crates/rusty-lcu](https://crates.io/crates/rusty-lcu)
 
 ## Quick Start
 
