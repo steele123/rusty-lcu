@@ -36,9 +36,25 @@ pub enum Error {
         body: String,
     },
 
+    #[cfg(feature = "live-client")]
+    #[error("Live Client Data API returned {status}: {body}")]
+    LiveClientData {
+        status: reqwest::StatusCode,
+        body: String,
+    },
+
+    #[cfg(feature = "live-client")]
+    #[error("timed out waiting {timeout:?} for a League game")]
+    LiveClientWaitTimedOut { timeout: std::time::Duration },
+
+    #[cfg(feature = "live-client")]
+    #[error("operation was cancelled")]
+    OperationCancelled,
+
     #[error("request failed: {0}")]
     Request(#[from] reqwest::Error),
 
+    #[cfg(feature = "websocket")]
     #[error("websocket failed: {0}")]
     WebSocket(#[from] tokio_tungstenite::tungstenite::Error),
 
@@ -48,9 +64,11 @@ pub enum Error {
     #[error("json failed: {0}")]
     Json(#[from] serde_json::Error),
 
+    #[cfg(feature = "websocket")]
     #[error("invalid header value: {0}")]
     Header(#[from] http::header::InvalidHeaderValue),
 
+    #[cfg(feature = "websocket")]
     #[error("http request build failed: {0}")]
     Http(#[from] http::Error),
 

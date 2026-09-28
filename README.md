@@ -3,8 +3,9 @@
 [![Crates.io](https://img.shields.io/crates/v/rusty-lcu.svg)](https://crates.io/crates/rusty-lcu)
 [![Docs.rs](https://docs.rs/rusty-lcu/badge.svg)](https://docs.rs/rusty-lcu)
 
-A library for interacting with the LCU API in Rust. It provides a typed interface to the LCU endpoints, as well as
-utilities for polling, event streams, and credential management.
+A library for interacting with the LCU and Live Client Data APIs in Rust. It
+provides a typed interface to LCU endpoints, in-game data, polling, event
+streams, and credential management.
 
 The endpoint layer is generated from `schema/swagger.json`, which is vendored
 from the Dysolix LCU swagger data. To regenerate from a newer schema, run
@@ -17,7 +18,7 @@ vendored file.
 
 ```toml
 [dependencies]
-rusty-lcu = "0.1.0"
+rusty-lcu = "0.1.1"
 ```
 
 Package: [crates.io/crates/rusty-lcu](https://crates.io/crates/rusty-lcu)
@@ -124,6 +125,103 @@ summoner through a generated typed endpoint:
 ```powershell
 cargo run --example current_summoner
 ```
+
+## Live Client Data
+
+Riot's [Live Client Data API](https://developer.riotgames.com/docs/lol#game-client-api_live-client-data-api)
+is available while a League game is running. It uses the local game-client
+service directly, so it does not require LCU credentials.
+
+```rust
+use rusty_lcu::LiveClientDataClient;
+
+let client = LiveClientDataClient::new()?;
+let game = client.all_game_data().await?;
+
+println!("game time: {}", game.game_data.game_time);
+println!("active player: {}", game.active_player.summoner_name);
+```
+
+Typed methods cover `allgamedata`, active-player details, the player list,
+per-player scores/spells/runes/items, events, and game stats. Per-player methods
+accept a Riot ID:
+
+```rust
+let scores = client.player_scores("Game Name#NA1").await?;
+println!("{} / {} / {}", scores.kills, scores.deaths, scores.assists);
+```
+
+Check for a running game or wait for one with configurable polling, timeout,
+and cancellation:
+
+```rust
+use std::time::Duration;
+use rusty_lcu::{CancellationToken, WaitForGameOptions};
+
+if !client.is_game_running().await? {
+    let cancellation_token = CancellationToken::new();
+    let game = client
+        .wait_for_game(WaitForGameOptions {
+            poll_interval: Duration::from_secs(1),
+            timeout: Some(Duration::from_secs(30)),
+            cancellation_token,
+        })
+        .await?;
+    println!("game started on {}", game.map_name);
+}
+```
+
+The client builder configures individual request timeouts and transient retry
+behavior:
+
+```rust
+use std::time::Duration;
+
+let client = LiveClientDataClient::builder()
+    .request_timeout(Duration::from_secs(3))
+    .max_retries(2)
+    .retry_delay(Duration::from_millis(200))
+    .build()?;
+```
+
+Live events are polled from Riot's cumulative event list and emitted once. The
+stream can include events that occurred before it was created, or begin with
+only newly observed events:
+
+```rust
+use rusty_lcu::LiveEventPollOptions;
+use rusty_lcu::live_client::GameEventKind;
+
+let mut events = client.event_stream(LiveEventPollOptions::default());
+
+while let Some(event) = events.next_event().await? {
+    if let GameEventKind::ChampionKill(kill) = event.kind() {
+        println!("{:?} defeated {:?}", kill.killer_name, kill.victim_name);
+    }
+}
+```
+
+Run the included example while in a game:
+
+```powershell
+cargo run --example live_game_data
+```
+
+## Features
+
+All integrations are enabled by default. Disable default features to keep only
+the API surface an application needs:
+
+```toml
+# Live Client Data only; skips compiling the generated LCU endpoint layer.
+rusty-lcu = { version = "0.1.1", default-features = false, features = ["live-client"] }
+
+# LCU over HTTP without websocket event support.
+rusty-lcu = { version = "0.1.1", default-features = false, features = ["lcu"] }
+```
+
+Available features are `lcu`, `live-client`, and `websocket`. The `websocket`
+feature includes `lcu`.
 
 ## Polling
 

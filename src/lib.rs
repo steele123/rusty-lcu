@@ -1,25 +1,75 @@
-//! Rust helpers for the League Client Update (LCU) API.
-//!
-//! Endpoint wrappers are generated at build time from `schema/swagger.json`.
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
+//! Async Rust clients for League of Legends' local APIs.
+//!
+//! `rusty-lcu` supports two local services:
+//!
+//! - `LcuClient` communicates with the League Client Update API. Its endpoint
+//!   wrappers and models are generated from the vendored OpenAPI schema.
+//! - `LiveClientDataClient` reads gameplay data from the game process while a
+//!   match is running, without requiring LCU credentials.
+//!
+//! All integrations are enabled by default. Applications that only need live
+//! game data can disable default features and enable `live-client` to avoid
+//! compiling the large generated LCU endpoint layer.
+//!
+//! # Live game example
+//!
+//! ```no_run
+//! # #[cfg(feature = "live-client")]
+//! # async fn example() -> rusty_lcu::Result<()> {
+//! use rusty_lcu::LiveClientDataClient;
+//!
+//! let client = LiveClientDataClient::new()?;
+//! let game = client.wait_for_game(Default::default()).await?;
+//! println!("{} at {:.1}s", game.map_name, game.game_time);
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! # Cargo features
+//!
+//! - `lcu`: authenticated HTTP access, credential discovery, generated
+//!   endpoints, and generated models.
+//! - `live-client`: Live Client Data access, waiting, and event polling.
+//! - `websocket`: LCU websocket events; implies `lcu`.
+
+#[cfg(feature = "lcu")]
 mod client;
+#[cfg(feature = "lcu")]
 mod credentials;
 mod error;
+#[cfg(feature = "websocket")]
 mod events;
+#[cfg(feature = "live-client")]
+#[cfg_attr(docsrs, doc(cfg(feature = "live-client")))]
+pub mod live_client;
 
+#[cfg(feature = "lcu")]
+#[cfg_attr(docsrs, doc(cfg(feature = "lcu")))]
+/// Generated LCU endpoint metadata, functions, and response models.
+#[allow(missing_docs)]
 pub mod generated {
     include!(concat!(env!("OUT_DIR"), "/lcu_endpoints.rs"));
 }
 
+#[cfg(feature = "lcu")]
 pub use client::{
     ConnectOptions, EndpointParams, LcuClient, PollEvent, PollOptions, ReadinessCheck,
     RequestOptions,
 };
+#[cfg(feature = "lcu")]
 pub use credentials::{Credentials, CredentialsSource};
 pub use error::{Error, Result};
+#[cfg(feature = "websocket")]
 pub use events::{EventFilter, EventStream, LcuEvent};
+#[cfg(feature = "live-client")]
+pub use live_client::{
+    CancellationToken, LiveClientDataClient, LiveClientDataClientBuilder, LiveEventPollOptions,
+    LiveEventStream, WaitForGameOptions,
+};
 
-#[cfg(test)]
+#[cfg(all(test, feature = "lcu"))]
 mod tests {
     use super::generated::{
         ENDPOINTS, GET_LOL_SUMMONER_V1_CURRENT_SUMMONER, PUT_LOL_CHAT_V1_CONVERSATIONS_BY_ID,

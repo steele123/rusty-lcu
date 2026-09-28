@@ -5,9 +5,9 @@ use serde::{Serialize, de::DeserializeOwned};
 use serde_json::Value;
 use tokio::time::sleep;
 
-use crate::{
-    Credentials, CredentialsSource, Error, Result, events::EventStream, generated::Endpoint,
-};
+#[cfg(feature = "websocket")]
+use crate::events::EventStream;
+use crate::{Credentials, CredentialsSource, Error, Result, generated::Endpoint};
 
 #[derive(Debug, Clone)]
 pub struct LcuClient {
@@ -177,6 +177,7 @@ impl LcuClient {
         self.credentials.as_ref()
     }
 
+    #[cfg(feature = "websocket")]
     pub async fn event_stream(&self) -> Result<EventStream> {
         let credentials = self.credentials.as_ref().ok_or(Error::NotConnected)?;
         EventStream::connect(credentials).await

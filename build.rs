@@ -11,6 +11,10 @@ fn main() {
     println!("cargo:rerun-if-env-changed=LCU_SWAGGER_PATH");
     println!("cargo:rerun-if-changed=schema/swagger.json");
 
+    if env::var_os("CARGO_FEATURE_LCU").is_none() {
+        return;
+    }
+
     let swagger_path =
         env::var("LCU_SWAGGER_PATH").unwrap_or_else(|_| "schema/swagger.json".to_string());
 
